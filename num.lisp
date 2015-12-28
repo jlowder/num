@@ -1,11 +1,11 @@
 (in-package :cl-user)
 
-(defpackage :com.lowdermilk.num
+(defpackage :num
   (:use :common-lisp
-        :com.lowdermilk.prompt)
+        :prompt)
   (:export :main))
 
-(in-package :com.lowdermilk.num)
+(in-package :num)
 
 (defparameter *mode* :dec)
 (defparameter *number* 0)
@@ -68,13 +68,14 @@
 (defun reverse-num ()
   (let ((bv (pad (integer->bit-vector *number*) *bitwidth*)))
     (display (bit-vector->integer (reverse bv)))))
-  
+
 (defmacro with-shell-command ((cmd line) &body body)
-  `(let ((out (sb-ext:process-output (sb-ext:run-program "/bin/sh" (list "-c" ,cmd) :wait nil :output :stream))))
-     (with-open-stream (out out)
-       (loop for ,line = (read-line out nil)
-          while ,line do
-            ,@body))))
+  `(let ((out (uiop:run-program (list "/bin/sh" "-c" ,cmd) :output :string)))
+     (loop for ,line in (loop for i = 0 then (1+ j)
+                           as j = (position #\newline out :start i)
+                           collect (subseq out i j)
+                           while j)
+        do ,@body)))
 
 (defun clipboard ()
   (let* ((str1 (subseq (getval *mode*) 4))
